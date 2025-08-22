@@ -6,6 +6,7 @@ A small interpreted language (CCRP) with a GTK-based IDE. Supports integers, str
 
 ```
 make install-lang
+make install-mime
 make
 ```
 
