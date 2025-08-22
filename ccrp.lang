@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<language id="ccrp" _name="CCRP" version="2.0" _section="Sources">
+  <metadata>
+    <property name="mimetypes">text/x-ccrp</property>
+    <property name="globs">*.crp</property>
+  </metadata>
+  
+  <styles>
+    <style id="comment" _name="Comment" map-to="def:comment"/>
+    <style id="keyword" _name="Keyword" map-to="def:keyword"/>
+    <style id="string" _name="String" map-to="def:string"/>
+    <style id="number" _name="Number" map-to="def:number"/>
+    <style id="operator" _name="Operator" map-to="def:operator"/>
+    <style id="function" _name="Function" map-to="def:function"/>
+    <style id="library" _name="Library" map-to="def:preprocessor"/>
+  </styles>
+  
+  <definitions>
+    <context id="ccrp">
+      <include>
+        <context ref="comment"/>
+        <context ref="string"/>
+        <context ref="number"/>
+        <context ref="keyword"/>
+        <context ref="function"/>
+        <context ref="library"/>
+        <context ref="operator"/>
+      </include>
+    </context>
+    
+    <context id="comment" style-ref="comment">
+      <start>#</start>
+      <end>$</end>
+    </context>
+    
+    <context id="string" style-ref="string">
+      <start>"</start>
+      <end>"</end>
+    </context>
+    
+    <context id="number" style-ref="number">
+      <match>\b\d+\b</match>
+    </context>
+    
+    <context id="keyword" style-ref="keyword">
+      <keyword>print</keyword>
+      <keyword>input</keyword>
+      <keyword>input_text</keyword>
+      <keyword>if</keyword>
+      <keyword>else</keyword>
+      <keyword>endif</keyword>
+      <keyword>while</keyword>
+      <keyword>endwhile</keyword>
+      <keyword>fn</keyword>
+      <keyword>function</keyword>
+      <keyword>return</keyword>
+    </context>
+    
+    <context id="function" style-ref="function">
+      <keyword>sqrt</keyword>
+      <keyword>abs</keyword>
+      <keyword>sin</keyword>
+      <keyword>cos</keyword>
+      <keyword>tan</keyword>
+      <keyword>log</keyword>
+      <keyword>exp</keyword>
+      <keyword>pow</keyword>
+      <keyword>mod</keyword>
+      <keyword>max</keyword>
+      <keyword>min</keyword>
+    </context>
+    
+    <context id="library" style-ref="library">
+      <match>\[src\].*</match>
+    </context>
+    
+    <context id="operator" style-ref="operator">
+      <match>\+|-|\*|/|%|=|==|!=|<=|>=|<|>|\(|\)</match>
+    </context>
+  </definitions>
+</language>
