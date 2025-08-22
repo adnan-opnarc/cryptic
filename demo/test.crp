@@ -1,6 +1,6 @@
-# CCRP Enhanced Language Test
-[src]std
-[src]math
+
+#[std]
+#[math]
 
 # Basic variables and math
 print "=== Basic Math Operations ==="
