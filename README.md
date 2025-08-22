@@ -71,7 +71,7 @@ Math built-ins (require `[src] math`): `sqrt, abs, sin, cos, tan, log, exp, pow,
 See `test.crp`, `simple_test.crp`, `test_input.crp`, `test_library.crp`.
 
 ```
-[src] math
+#[math]
 print "sum:", 2 + 3
 input_text name "Name: "
 print "Hello,", name
