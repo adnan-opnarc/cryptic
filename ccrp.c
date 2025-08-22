@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
+#include <gtk/gtk.h>
 
 /*
  * CCRP Interpreter core
@@ -31,6 +32,226 @@ int current_line_index = 0;
 
 int (*get_input_from_gui)(const char *prompt) = NULL;
 char* (*get_text_input_from_gui)(const char *prompt) = NULL;
+
+// ------------------------ GTK lightweight runtime ------------------------
+static int gtk_initialized = 0;
+static GHashTable *gtk_objects = NULL; // name -> GtkWidget*
+static GtkWidget *gtk_main_window = NULL;
+static GPtrArray *css_providers = NULL; // keep providers alive
+
+static void ensure_gtk_initialized(void) {
+    if (!gtk_initialized) {
+        int argc = 0; char **argv = NULL;
+        gtk_init(&argc, &argv);
+        gtk_objects = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+        css_providers = g_ptr_array_new();
+        gtk_initialized = 1;
+    }
+}
+
+static GtkWidget* gtk_get(const char *name) {
+    if (!gtk_initialized || !gtk_objects) return NULL;
+    return GTK_WIDGET(g_hash_table_lookup(gtk_objects, name));
+}
+
+static void gtk_put(const char *name, GtkWidget *w) {
+    ensure_gtk_initialized();
+    g_hash_table_insert(gtk_objects, g_strdup(name), w);
+}
+
+static void handle_gtk_command(const char *line) {
+    // Requires gtk library enabled
+    if (!lib_enabled("gtk")) {
+        printf("Error: 'gtk' library not imported. Add #[gtk] first.\n");
+        return;
+    }
+    ensure_gtk_initialized();
+
+    // Parse create
+    {
+        char kind[32], type[32], name[64];
+        if (sscanf(line, "gtk %31s %31s %63s", kind, type, name) == 3 && strcmp(kind, "create") == 0) {
+            GtkWidget *w = NULL;
+            if (strcmp(type, "window") == 0) {
+                w = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+                g_signal_connect(w, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+                if (!gtk_main_window) gtk_main_window = w;
+            } else if (strcmp(type, "button") == 0) {
+                w = gtk_button_new();
+            } else if (strcmp(type, "input") == 0 || strcmp(type, "entry") == 0) {
+                w = gtk_entry_new();
+            } else if (strcmp(type, "boxv") == 0 || strcmp(type, "vbox") == 0) {
+                w = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+            } else if (strcmp(type, "boxh") == 0 || strcmp(type, "hbox") == 0) {
+                w = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+            } else if (strcmp(type, "label") == 0) {
+                w = gtk_label_new("");
+            } else if (strcmp(type, "image") == 0) {
+                w = gtk_image_new();
+            }
+            if (w) {
+                gtk_put(name, w);
+            } else {
+                printf("Error: unknown gtk create type '%s'\n", type);
+            }
+            return;
+        }
+    }
+
+    // Parse set NAME prop ...
+    {
+        char dummy[8], name[64], prop[32];
+        if (sscanf(line, "gtk %7s %63s %31s", dummy, name, prop) >= 3 && strcmp(dummy, "set") == 0) {
+            GtkWidget *w = gtk_get(name);
+            if (!w) { printf("Error: gtk object '%s' not found\n", name); return; }
+            if (strcmp(prop, "title") == 0) {
+                char title[256];
+                if (sscanf(line, "gtk set %*s title \"%255[^\"]\"", title) == 1) {
+                    if (GTK_IS_WINDOW(w)) gtk_window_set_title(GTK_WINDOW(w), title);
+                }
+            } else if (strcmp(prop, "size") == 0) {
+                int wpx=0, hpx=0;
+                if (sscanf(line, "gtk set %*s size %dx%d", &wpx, &hpx) == 2) {
+                    if (GTK_IS_WINDOW(w)) gtk_window_set_default_size(GTK_WINDOW(w), wpx, hpx);
+                    else gtk_widget_set_size_request(w, wpx, hpx);
+                }
+            } else if (strcmp(prop, "text") == 0) {
+                char text[256];
+                if (sscanf(line, "gtk set %*s text \"%255[^\"]\"", text) == 1) {
+                    if (GTK_IS_BUTTON(w)) gtk_button_set_label(GTK_BUTTON(w), text);
+                    else if (GTK_IS_LABEL(w)) gtk_label_set_text(GTK_LABEL(w), text);
+                    else if (GTK_IS_ENTRY(w)) gtk_entry_set_text(GTK_ENTRY(w), text);
+                }
+            } else {
+                printf("Error: unknown gtk property '%s'\n", prop);
+            }
+            return;
+        }
+    }
+
+    // Parse add PARENT CHILD
+    {
+        char parent[64], child[64];
+        if (sscanf(line, "gtk add %63s %63s", parent, child) == 2) {
+            GtkWidget *pw = gtk_get(parent);
+            GtkWidget *cw = gtk_get(child);
+            if (!pw || !cw) { printf("Error: gtk add missing widgets\n"); return; }
+            if (GTK_IS_WINDOW(pw)) {
+                GtkWidget *existing = gtk_bin_get_child(GTK_BIN(pw));
+                if (existing) gtk_container_remove(GTK_CONTAINER(pw), existing);
+                gtk_container_add(GTK_CONTAINER(pw), cw);
+            } else if (GTK_IS_BOX(pw)) {
+                gtk_box_pack_start(GTK_BOX(pw), cw, FALSE, FALSE, 0);
+            } else if (GTK_IS_CONTAINER(pw)) {
+                gtk_container_add(GTK_CONTAINER(pw), cw);
+            } else {
+                printf("Error: parent '%s' not a container\n", parent);
+            }
+            return;
+        }
+    }
+
+    // Parse show NAME
+    {
+        char name[64];
+        if (sscanf(line, "gtk show %63s", name) == 1) {
+            GtkWidget *w = gtk_get(name);
+            if (!w) { printf("Error: gtk object '%s' not found\n", name); return; }
+            gtk_widget_show_all(w);
+            if (GTK_IS_WINDOW(w)) gtk_main_window = w;
+            return;
+        }
+    }
+
+    // Parse run
+    if (strncmp(line, "gtk run", 7) == 0) {
+        if (gtk_main_window) {
+            gtk_widget_show_all(gtk_main_window);
+        }
+        gtk_main();
+        return;
+    }
+
+    printf("Error: unknown gtk command.\n");
+}
+
+// Apply CSS from a style block
+static void handle_style_block(const char *first_line) {
+    ensure_gtk_initialized();
+    // Extract target between 'style' and '{'
+    char target[64] = "";
+    const char *brace = strchr(first_line, '{');
+    if (brace) {
+        char header[256];
+        int len = (int)(brace - first_line);
+        if (len > 255) len = 255;
+        strncpy(header, first_line, len); header[len] = '\0';
+        sscanf(header, " %*s %63s", target);
+    }
+    // Collect inner CSS lines between matching braces
+    int depth = 0; int start_i = current_line_index; int end_i = -1;
+    GString *css_inner = g_string_new("");
+    for (int i = start_i; i < current_line_count; i++) {
+        const char *ln = current_lines[i];
+        const char *p = ln;
+        while (*p) {
+            if (*p == '{') { depth++; if (depth == 1) {
+                // include tail after '{' on same line
+                const char *after = p + 1;
+                while (*after && *after != '}') after++;
+            } }
+            else if (*p == '}') { depth--; if (depth == 0) { end_i = i; break; } }
+            p++;
+        }
+        if (i > start_i) {
+            // Append line content (strip // comments)
+            char buf[512]; strncpy(buf, ln, sizeof(buf)-1); buf[sizeof(buf)-1] = '\0';
+            char *com = strstr(buf, "//"); if (com) *com = '\0';
+            g_string_append(buf[0] ? css_inner : css_inner, buf);
+            g_string_append(css_inner, "\n");
+        }
+        if (end_i != -1) break;
+    }
+    if (end_i == -1) { g_string_free(css_inner, TRUE); return; }
+
+    // Build final CSS
+    GString *css = g_string_new("");
+    int is_global = 0;
+    if (target[0] == '\0' || strcmp(target, "*") == 0) { is_global = 1; }
+
+    if (!is_global) {
+        GtkWidget *w = gtk_get(target);
+        if (w) {
+            gtk_widget_set_name(w, target);
+            g_string_append_printf(css, "#%s {\n%s}\n", target, css_inner->str);
+            GtkCssProvider *prov = gtk_css_provider_new();
+            gtk_css_provider_load_from_data(prov, css->str, -1, NULL);
+            gtk_style_context_add_provider(gtk_widget_get_style_context(w), GTK_STYLE_PROVIDER(prov), GTK_STYLE_PROVIDER_PRIORITY_USER);
+            g_ptr_array_add(css_providers, prov);
+        } else {
+            // Treat as type selector (e.g., button, entry, label, window)
+            g_string_append_printf(css, "%s {\n%s}\n", target, css_inner->str);
+            GtkCssProvider *prov = gtk_css_provider_new();
+            gtk_css_provider_load_from_data(prov, css->str, -1, NULL);
+            GdkScreen *screen = gdk_screen_get_default();
+            gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(prov), GTK_STYLE_PROVIDER_PRIORITY_USER);
+            g_ptr_array_add(css_providers, prov);
+        }
+    } else {
+        // Global * selector
+        g_string_append_printf(css, "* {\n%s}\n", css_inner->str);
+        GtkCssProvider *prov = gtk_css_provider_new();
+        gtk_css_provider_load_from_data(prov, css->str, -1, NULL);
+        GdkScreen *screen = gdk_screen_get_default();
+        gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(prov), GTK_STYLE_PROVIDER_PRIORITY_USER);
+        g_ptr_array_add(css_providers, prov);
+    }
+
+    g_string_free(css_inner, TRUE);
+    g_string_free(css, TRUE);
+    // Advance interpreter to end of block
+    current_line_index = end_i;
+}
 
 // ------------------------ Utility: split/join lines ------------------------
 char** split_lines(const char *code, int *line_count) {
@@ -554,18 +775,26 @@ void handle_input_text_statement(const char *line) {
 
 // ------------------------ Dispatcher ------------------------
 void run_line(const char *line) {
+    // Strip '//' comments
+    char raw[512]; strncpy(raw, line, sizeof(raw)-1); raw[sizeof(raw)-1] = '\0';
+    char *cpos = strstr(raw, "//");
+    if (cpos) *cpos = '\0';
+
     char trimmed_line[256];
-    if (sscanf(line, " %255s", trimmed_line) != 1) return;
+    if (sscanf(raw, " %255s", trimmed_line) != 1) return;
 
     if (control_state.skip_to_end &&
         strncmp(trimmed_line, "else", 4) != 0 &&
         strncmp(trimmed_line, "endif", 5) != 0 &&
         strncmp(trimmed_line, "endwhile", 8) != 0) return;
 
+    // Style block
+    if (strncmp(trimmed_line, "style", 5) == 0 && strchr(raw, '{')) { handle_style_block(raw); return; }
+
     // Pragma-based library import: #[lib]
     if (trimmed_line[0] == '#' && trimmed_line[1] == '[') {
         char lib[50];
-        if (sscanf(line, " #[%49[^]]]", lib) == 1 || sscanf(line, "#[%49[^]]]", lib) == 1) {
+        if (sscanf(raw, " #[%49[^]]]", lib) == 1 || sscanf(raw, "#[%49[^]]]", lib) == 1) {
             import_lib(lib);
             load_library(lib);
         }
@@ -575,35 +804,112 @@ void run_line(const char *line) {
     // Library import: [src] math
     if (strncmp(trimmed_line, "[src]", 5) == 0) {
         char lib[50];
-        if (sscanf(line, "[src] %49s", lib) == 1 || sscanf(line, " [src] %49s", lib) == 1) { import_lib(lib); load_library(lib); }
+        if (sscanf(raw, "[src] %49s", lib) == 1 || sscanf(raw, " [src] %49s", lib) == 1) { import_lib(lib); load_library(lib); }
+        return;
+    }
+
+    // GTK commands: only when 'gtk ' (space) form, not 'gtk.' dot-calls
+    {
+        const char *p = raw; while (*p == ' ') p++;
+        if (strncmp(p, "gtk ", 4) == 0) { handle_gtk_command(p); return; }
+    }
+
+    // Dot-call sugar:
+    // - gtk.window(name)        -> gtk create window name
+    // - gtk.button(name)        -> gtk create button name
+    // - obj.title("...")        -> gtk set obj title "..."
+    // - obj.text("...")         -> gtk set obj text "..."
+    // - obj.size(400x600|w,h)   -> gtk set obj size WxH
+    // - parent.add(child)       -> gtk add parent child
+    // - obj.show()              -> gtk show obj
+    // - gtk.run()               -> gtk run
+    {
+        char ident[64], method[64], args[256];
+        // gtk.<method>(args)
+        if (sscanf(raw, "gtk.%63[^ (](%255[^)])", method, args) >= 1) {
+            if (strcmp(method, "run") == 0) {
+                handle_gtk_command("gtk run");
+                return;
+            } else {
+                // creators take single name
+                char name[64];
+                if (sscanf(args, " %63[^ )]", name) == 1) {
+                    char buf[256];
+                    snprintf(buf, sizeof(buf), "gtk create %s %s", method, name);
+                    handle_gtk_command(buf);
+                    return;
+                }
+            }
+        }
+        // <ident>.<method>(args)
+        if (sscanf(raw, " %63[^ .].%63[^ (](%255[^)])", ident, method, args) >= 2) {
+            // trim args whitespace
+            char *ap = args; while (*ap==' ') ap++;
+            // .show()
+            if (strcmp(method, "show") == 0) {
+                char buf[256]; snprintf(buf, sizeof(buf), "gtk show %s", ident);
+                handle_gtk_command(buf); return;
+            }
+            // .add(child)
+            if (strcmp(method, "add") == 0) {
+                char child[64]; if (sscanf(ap, " %63[^ )]", child) == 1) {
+                    char buf[256]; snprintf(buf, sizeof(buf), "gtk add %s %s", ident, child);
+                    handle_gtk_command(buf); return;
+                }
+            }
+            // .title("...") or .text("...")
+            if (strcmp(method, "title") == 0 || strcmp(method, "text") == 0) {
+                char str[256]; if (sscanf(raw, " %*[^ .].%*[^ (](\"%255[^\"]\")", str) == 1) {
+                    char buf[512]; snprintf(buf, sizeof(buf), "gtk set %s %s \"%s\"", ident, method, str);
+                    handle_gtk_command(buf); return;
+                }
+            }
+            // .size(400x600) or .size(w,h)
+            if (strcmp(method, "size") == 0) {
+                int w=0,h=0;
+                if (sscanf(ap, "%dx%d", &w, &h) == 2 || sscanf(ap, "%d , %d", &w, &h) == 2) {
+                    char buf[256]; snprintf(buf, sizeof(buf), "gtk set %s size %dx%d", ident, w, h);
+                    handle_gtk_command(buf); return;
+                }
+            }
+        }
+    }
+
+    // class NAME TYPE  -> shortcut for gtk create TYPE NAME
+    if (strncmp(trimmed_line, "class", 5) == 0) {
+        char name[64], type[32];
+        if (sscanf(raw, "class %63s %31s", name, type) == 2) {
+            char buf[160]; snprintf(buf, sizeof(buf), "gtk create %s %s", type, name);
+            handle_gtk_command(buf);
+        }
         return;
     }
 
     // Function definition: accept both `function` and `fn`
     if (strncmp(trimmed_line, "function", 8) == 0 || strncmp(trimmed_line, "fn", 2) == 0) {
-        handle_function_definition_line(line);
+        handle_function_definition_line(raw);
         return;
     }
 
     // Control flow
     if (strncmp(trimmed_line, "if", 2) == 0) {
-        char condition[256]; if (sscanf(line, "if %255[^\n]", condition) == 1) handle_if_statement(condition); return;
+        char condition[256]; if (sscanf(raw, "if %255[^\n]", condition) == 1) handle_if_statement(condition); return;
     }
     if (strncmp(trimmed_line, "else", 4) == 0) { handle_else_statement(); return; }
     if (strncmp(trimmed_line, "endif", 5) == 0) { handle_endif_statement(); return; }
     if (strncmp(trimmed_line, "while", 5) == 0) {
-        char condition[256]; if (sscanf(line, "while %255[^\n]", condition) == 1) handle_while_statement(condition); return;
+        char condition[256]; if (sscanf(raw, "while %255[^\n]", condition) == 1) handle_while_statement(condition); return;
     }
     if (strncmp(trimmed_line, "endwhile", 8) == 0) { handle_endwhile_statement(); return; }
 
     // Input
-    if (strncmp(line, "input_text ", 11) == 0) { handle_input_text_statement(line); return; }
-    if (strncmp(line, "input ", 6) == 0) { handle_input_statement(line); return; }
+    if (strncmp(raw, "input_text ", 11) == 0) { handle_input_text_statement(raw); return; }
+    if (strncmp(raw, "input ", 6) == 0) { handle_input_statement(raw); return; }
 
     // Print: supports comma-separated items
-    if (strncmp(line, "print ", 6) == 0) {
+    if (strncmp(raw, "print ", 6) == 0) {
         char expr[256];
-        if (sscanf(line, "print %255[^\n]", expr) == 1) {
+        if (sscanf(raw, "print %255[^\n]", expr) == 1) {
             if (expr[0] == '"' && expr[strlen(expr)-1] == '"') {
                 expr[strlen(expr)-1] = '\0'; printf("%s\n", expr + 1);
             } else {
@@ -650,12 +956,17 @@ void run_line(const char *line) {
 
     // Assignment: string or numeric
     char var[50], rhs[256];
-    if (sscanf(line, "%49[^ ] = %255[^\n]", var, rhs) == 2) {
+    if (sscanf(raw, "%49[^ ] = %255[^\n]", var, rhs) == 2) {
         if (rhs[0] == '"' && rhs[strlen(rhs)-1] == '"') {
             rhs[strlen(rhs)-1] = '\0'; set_string_var(var, rhs + 1);
         } else {
             set_var(var, eval_expr(rhs));
         }
+        return;
+    }
+
+    // Ignore solitary braces for grouping blocks
+    if (strcmp(trimmed_line, "{") == 0 || strcmp(trimmed_line, "}") == 0) {
         return;
     }
 }

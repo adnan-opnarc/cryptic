@@ -1,0 +1,46 @@
+#[gtk]
+
+// widgets
+gtk.window(win)
+win.title("Styled App")
+class root vbox
+gtk.button(ok)
+ok.text("OK")
+gtk.entry(name)
+gtk.image(logo)
+
+// layout
+win.add(root)
+root.add(logo)
+root.add(name)
+root.add(ok)
+
+// per-widget style by name
+style win {
+  background-color: #222;
+  color: #eee;
+}
+style ok {
+  color: white;
+  background: #3b82f6;
+  border-radius: 6px;
+  padding: 8px 16px;
+}
+
+// type-based styles
+style button {
+  font-weight: bold;
+}
+style entry {
+  border: 1px solid #555;
+  padding: 6px;
+  color: #ccc;
+}
+
+// global
+style * {
+  font-family: Sans;
+}
+
+win.show()
+gtk.run()

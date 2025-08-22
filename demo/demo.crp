@@ -1,8 +1,8 @@
 # CCRP Modern IDE Demo
 # This file demonstrates the features of the CCRP language
 
-#[string]
-#[math]
+[src]std
+[src]math
 
 # Basic arithmetic
 print "Basic Math Operations:"

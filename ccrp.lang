@@ -29,7 +29,7 @@
     </context>
     
     <context id="comment" style-ref="comment">
-      <start>#</start>
+      <start>//</start>
       <end>$</end>
     </context>
     
@@ -54,6 +54,9 @@
       <keyword>fn</keyword>
       <keyword>function</keyword>
       <keyword>return</keyword>
+      <keyword>gtk</keyword>
+      <keyword>class</keyword>
+      <keyword>style</keyword>
     </context>
     
     <context id="function" style-ref="function">
@@ -72,10 +75,11 @@
     
     <context id="library" style-ref="library">
       <match>\[src\].*</match>
+      <match>#\[[^\]]+\]</match>
     </context>
     
     <context id="operator" style-ref="operator">
-      <match>\+|-|\*|/|%|=|==|!=|<=|>=|<|>|\(|\)</match>
+      <match>\+|-|\*|/|%|=|==|!=|<=|>=|<|>|\(|\)|\{|\}|\.</match>
     </context>
   </definitions>
 </language>

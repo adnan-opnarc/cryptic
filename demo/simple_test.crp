@@ -1,5 +1,5 @@
 # Simple Input Test
-#[std]
+[src]std
 
 print "Simple Input Test"
 
