@@ -15,7 +15,7 @@ make
 ## Run
 
 ```
-./cride_modern     # launch IDE
+./cryptic     # launch IDE
 ./cride_interpreter file.crp
 ```
 
