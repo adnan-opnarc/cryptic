@@ -1,0 +1,3 @@
+*.crp linguist-language=Cryptic
+*.crh linguist-language=CrypticHeader
+*.lang linguist-language=CrypticSyntax
