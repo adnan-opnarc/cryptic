@@ -6,11 +6,13 @@
 #include <math.h>
 
 /*
- * CCRP interpreter core
- * - Variables: integers and strings
- * - Control flow: if/else/endif, while/endwhile
- * - I/O: input (int), input_text (string), print (supports comma-separated parts)
- * - Libraries: [src]lib loads src/lib.cr (Crypton), supports Rust-like `fn name(args) {}`
+ * CCRP Interpreter core
+ *
+ * Features:
+ * - Variables: int and string
+ * - Control: if/else, while
+ * - I/O: print, input, input_text
+ * - Libraries: [src]lib loads src/lib.crh (Crypton), supports Rust-like `fn name(args) {}`
  */
 
 Variable vars[MAX_VARS];
@@ -163,7 +165,7 @@ static int has_prefix_word(const char *line, const char *word) {
 
 char* read_library_file(const char *lib_name) {
     char filename[256];
-    snprintf(filename, sizeof(filename), "src/%s.cr", lib_name);
+    snprintf(filename, sizeof(filename), "src/%s.crh", lib_name);
     FILE *file = fopen(filename, "r");
     if (!file) return NULL;
     fseek(file, 0, SEEK_END);
@@ -560,10 +562,20 @@ void run_line(const char *line) {
         strncmp(trimmed_line, "endif", 5) != 0 &&
         strncmp(trimmed_line, "endwhile", 8) != 0) return;
 
+    // Pragma-based library import: #[lib]
+    if (trimmed_line[0] == '#' && trimmed_line[1] == '[') {
+        char lib[50];
+        if (sscanf(line, " #[%49[^]]]", lib) == 1 || sscanf(line, "#[%49[^]]]", lib) == 1) {
+            import_lib(lib);
+            load_library(lib);
+        }
+        return;
+    }
+
     // Library import: [src] math
     if (strncmp(trimmed_line, "[src]", 5) == 0) {
         char lib[50];
-        if (sscanf(line, "[src] %49s", lib) == 1) { import_lib(lib); load_library(lib); }
+        if (sscanf(line, "[src] %49s", lib) == 1 || sscanf(line, " [src] %49s", lib) == 1) { import_lib(lib); load_library(lib); }
         return;
     }
 

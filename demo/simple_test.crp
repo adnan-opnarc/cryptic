@@ -1,0 +1,25 @@
+# Simple Input Test
+[src]std
+
+print "Simple Input Test"
+
+# Integer input
+input age "Enter age: "
+print "Age is: "
+print age
+
+# Text input
+input_text name "Enter name: "
+print "Name is: "
+print name
+
+# String assignment
+message = "Hello World"
+print message
+
+# Math
+input x "Enter x: "
+input y "Enter y: "
+sum = x + y
+print "Sum is: "
+print sum 

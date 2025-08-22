@@ -39,13 +39,20 @@ make
 
 ## Libraries
 
-Place crypton files in `src/NAME.cr` and import using:
+- You can import libraries in two ways:
+  - Old style: `[src] NAME` → loads `src/NAME.crh`
+  - New pragma: `#[NAME]` on its own line → also loads `src/NAME.crh`
+
+Example:
 
 ```
-[src] NAME
+#[string]
+#[math]
 ```
 
-Example: `src/math.cr` (already provided). Loader accepts both `function` and `fn` headers:
+Example: `src/math.crh` and `src/string.crh` are provided. A stub `src/gtk.crh` is also available for UI-oriented experiments.
+
+Example: `src/math.crh` (already provided). Loader accepts both `function` and `fn` headers:
 
 ```
 fn max(a, b) {

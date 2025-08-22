@@ -1,0 +1,53 @@
+# CCRP Modern IDE Demo
+# This file demonstrates the features of the CCRP language
+
+[src]std
+[src]math
+
+# Basic arithmetic
+print "Basic Math Operations:"
+x = 10
+y = 5
+print "x = ", x
+print "y = ", y
+print "x + y = ", x + y
+print "x - y = ", x - y
+print "x * y = ", x * y
+print "x / y = ", x / y
+print "x % y = ", x % y
+
+# Math functions
+print "\nMath Functions:"
+print "sqrt(16) = ", sqrt(16)
+print "abs(-10) = ", abs(-10)
+print "sin(0) = ", sin(0)
+print "cos(0) = ", cos(0)
+print "pow(2, 3) = ", pow(2, 3)
+print "max(10, 20) = ", max(10, 20)
+print "min(10, 20) = ", min(10, 20)
+
+# If-else statements
+print "\nIf-Else Example:"
+if x > y
+    print "x is greater than y"
+else
+    print "x is not greater than y"
+endif
+
+# While loop
+print "\nWhile Loop Example:"
+i = 1
+while i <= 5
+    print "Count: ", i
+    i = i + 1
+endwhile
+
+# Input example
+print "\nInput Example:"
+input name "Enter your name: "
+print "Hello, ", name, "!"
+
+# Complex expression
+print "\nComplex Expression:"
+result = (x + y) * 2 + sqrt(25)
+print "Result: ", result 

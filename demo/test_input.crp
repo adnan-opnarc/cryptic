@@ -1,0 +1,73 @@
+# CCRP Input Test - Demonstrating Integer and Text Input
+[src]std
+[src]math
+
+print "=== CCRP Input Test ==="
+print "This program demonstrates both integer and text input"
+
+# Integer input
+print "\n--- Integer Input ---"
+input age "Enter your age: "
+print "You are ", age, " years old"
+
+input score "Enter your test score: "
+if score >= 90
+    print "Excellent! Grade: A"
+else if score >= 80
+    print "Good! Grade: B"
+else if score >= 70
+    print "Average! Grade: C"
+else
+    print "Needs improvement! Grade: D"
+endif
+
+# Text input
+print "\n--- Text Input ---"
+input_text name "Enter your name: "
+print "Hello, ", name, "!"
+
+input_text city "Enter your city: "
+print "You live in ", city
+
+input_text hobby "Enter your favorite hobby: "
+print "Your favorite hobby is ", hobby
+
+# Combining integer and text
+print "\n--- Combined Example ---"
+input_text full_name "Enter your full name: "
+input age_years "Enter your age: "
+input_text occupation "Enter your occupation: "
+
+print "\n=== Personal Information ==="
+print "Name: ", full_name
+print "Age: ", age_years
+print "Occupation: ", occupation
+
+# String assignment
+print "\n--- String Assignment ---"
+message = "Welcome to CCRP programming!"
+print message
+
+greeting = "Hello, World!"
+print greeting
+
+# Math with input
+print "\n--- Math with Input ---"
+input num1 "Enter first number: "
+input num2 "Enter second number: "
+sum = num1 + num2
+difference = num1 - num2
+product = num1 * num2
+
+print "Sum: ", sum
+print "Difference: ", difference
+print "Product: ", product
+
+if num2 != 0
+    quotient = num1 / num2
+    print "Quotient: ", quotient
+else
+    print "Cannot divide by zero!"
+endif
+
+print "\n=== Test Complete ===" 

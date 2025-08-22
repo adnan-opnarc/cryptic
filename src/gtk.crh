@@ -1,0 +1,35 @@
+// GTK stubs for CCRP
+// These are placeholders to let you experiment with a GTK-like API from CCRP code.
+// They do not create real windows yet; they only print what would happen.
+
+fn window_geo(w, h) {
+    print "GTK window size ", w, "x", h
+}
+
+fn root_pos(x, y) {
+    print "GTK root position ", x, ",", y
+}
+
+fn button_size(w, h) {
+    print "GTK button size ", w, "x", h
+}
+
+fn text(s) {
+    print s
+}
+
+fn exp_window() { print "exp.window()" }
+fn exp_root()   { print "exp.root()" }
+
+fn WindowSize() {
+    exp_window()
+}
+
+fn button() {
+    exp_root()
+}
+
+fn Window() {
+    exp_window()
+    exp_root()
+} 

@@ -1,0 +1,3 @@
+[src]std
+[src]math
+print "Testing silent imports"

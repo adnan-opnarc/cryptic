@@ -1,0 +1,100 @@
+# CCRP Enhanced Language Test
+[src]std
+[src]math
+
+# Basic variables and math
+print "=== Basic Math Operations ==="
+x = 10
+y = 5
+print "x = 10, y = 5"
+
+print "Addition: x + y ="
+print x + y
+
+print "Subtraction: x - y ="
+print x - y
+
+print "Multiplication: x * y ="
+print x * y
+
+print "Division: x / y ="
+print x / y
+
+print "Modulo: x % 3 ="
+print x % 3
+
+# Math functions
+print ""
+print "=== Math Functions ==="
+print "sqrt(16) ="
+print sqrt(16)
+
+print "abs(-7) ="
+print abs(-7)
+
+print "max(x, y) ="
+print max(x, y)
+
+print "min(x, y) ="
+print min(x, y)
+
+print "pow(2, 3) ="
+print pow(2, 3)
+
+# Conditional statements
+print ""
+print "=== If-Else Statements ==="
+age = 25
+print "age = 25"
+
+if age >= 18
+    print "You are an adult"
+else
+    print "You are a minor"
+endif
+
+if x > y
+    print "x is greater than y"
+else
+    print "x is not greater than y"
+endif
+
+# While loop
+print ""
+print "=== While Loop ==="
+counter = 1
+print "Counting from 1 to 5:"
+
+while counter <= 5
+    print counter
+    counter = counter + 1
+endwhile
+
+# Factorial calculation using while loop
+print ""
+print "=== Factorial of 5 ==="
+n = 5
+factorial = 1
+temp = n
+
+while temp > 0
+    factorial = factorial * temp
+    temp = temp - 1
+endwhile
+
+print "5! ="
+print factorial
+
+# Complex expressions with parentheses
+print ""
+print "=== Complex Expressions ==="
+result = (x + y) * 2
+print "(x + y) * 2 ="
+print result
+
+complex_calc = pow(2, 3) + sqrt(16) * 2
+print "pow(2,3) + sqrt(16) * 2 ="
+print complex_calc
+
+print ""
+print "=== Program Complete ==="

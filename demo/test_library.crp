@@ -1,0 +1,69 @@
+# Test Library System
+[src]math
+[src]string
+
+print "=== Library System Test ==="
+
+# Test math functions from library
+print "Testing math functions:"
+x = 16
+y = 25
+
+print "sqrt(16) = ", sqrt(x)
+print "sqrt(25) = ", sqrt(y)
+
+print "max(10, 20) = ", max(10, 20)
+print "min(10, 20) = ", min(10, 20)
+
+print "factorial(5) = ", factorial(5)
+print "gcd(48, 18) = ", gcd(48, 18)
+print "lcm(12, 18) = ", lcm(12, 18)
+
+print "is_prime(17) = ", is_prime(17)
+print "is_prime(24) = ", is_prime(24)
+
+print "fibonacci(10) = ", fibonacci(10)
+
+# Test string functions from library
+print "\nTesting string functions:"
+input_text name "Enter your name: "
+print "Name: ", name
+
+print "Length of name: ", length(name)
+print "Name in uppercase: ", to_upper(name)
+print "Name in lowercase: ", to_lower(name)
+
+input_text word "Enter a word: "
+print "Word: ", word
+print "Reversed: ", reverse(word)
+
+if is_palindrome(word)
+    print "The word is a palindrome!"
+else
+    print "The word is not a palindrome."
+endif
+
+# Test custom function definition
+print "\nTesting custom functions:"
+
+function add(a, b) {
+    return a + b
+}
+
+function multiply(a, b) {
+    return a * b
+}
+
+function greet(name) {
+    return "Hello, " + name + "!"
+}
+
+result1 = add(5, 3)
+result2 = multiply(4, 7)
+greeting = greet("World")
+
+print "add(5, 3) = ", result1
+print "multiply(4, 7) = ", result2
+print greeting
+
+print "\n=== Test Complete ===" 
