@@ -11,13 +11,13 @@ make
 ```
 
 - `cryptic_ide`: GUI IDE with dark scheme, syntax highlighting, file tree, and external Run
-- `cride_interpreter`: CLI interpreter for `.crp` files
+- `crypton`: CLI interpreter for `.crp` files
 
 ## Run
 
 ```
-./cryptic_ide           # launch IDE
-./cride_interpreter file.crp
+./cryptic_ide           # launch IDE(optional no need)
+./crypton file.crp
 ```
 
 ## Language Overview
@@ -32,7 +32,7 @@ make
   - Text: `input_text name "Enter name:"`
 - Variables: integers or strings
   - `x = 10`
-  - `name = "Alice"`
+  - `name = "Sadik"`
 - Control flow:
   - `if cond ... else ... endif`
   - `while cond ... endwhile`
@@ -214,3 +214,25 @@ gtk.run()
 - No colors? Run `make install-lang`, then restart `cryptic_ide`. The IDE also adds the current workspace and user language paths for `ccrp.lang`.
 - External terminal missing? The IDE tries `gnome-terminal`, then `xterm`, then `konsole`.
 - GTK commands say library missing? Ensure `#[gtk]` is at the top of your `.crp` file. 
+
+## Whens the next updated
+- No idea
+
+## Whats next
+- OS module for os related work
+- Enhanced GTK libary
+- Package manager
+
+## OS module code hint
+```
+#[genos]
+fn::os()
+fn.cpu.core(x)
+fn.cpu.id(y)
+fn.cpu.freq(z)
+fn.ram(xx)
+fn.ram.size(xy)
+
+print x, y, z, xx, xy
+
+```
